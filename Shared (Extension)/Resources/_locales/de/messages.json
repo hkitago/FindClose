@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "SchließenFinden",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Hebt winzige Schließen-Schaltflächen in Anzeigen und Einblendungen hervor.",
+        "description": "Description of what the extension does."
+    }
+}

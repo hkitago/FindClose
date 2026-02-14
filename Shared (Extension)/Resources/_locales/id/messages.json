@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "TemukanTutup",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Menyoroti tombol tutup kecil pada iklan dan hamparan.",
+        "description": "Description of what the extension does."
+    }
+}

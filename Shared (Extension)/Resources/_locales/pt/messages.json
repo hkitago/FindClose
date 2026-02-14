@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "BuscaFechar",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Destaca botões de fechar minúsculos em anúncios e sobreposições.",
+        "description": "Description of what the extension does."
+    }
+}

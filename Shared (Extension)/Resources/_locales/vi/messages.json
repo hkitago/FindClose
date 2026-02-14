@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "TìmĐóng",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Làm nổi bật các nút đóng nhỏ trên quảng cáo và lớp phủ.",
+        "description": "Description of what the extension does."
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "닫기찾기",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "광고 및 오버레이의 작은 닫기 버튼 강조 표시",
+        "description": "Description of what the extension does."
+    }
+}

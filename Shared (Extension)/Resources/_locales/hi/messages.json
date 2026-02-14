@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "खोजेंबंद",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "विज्ञापनों और परतों पर छोटे बंद बटनों को हाइलाइट करता है।",
+        "description": "Description of what the extension does."
+    }
+}

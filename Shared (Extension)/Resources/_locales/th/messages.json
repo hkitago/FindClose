@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "ค้นหาปิด",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "เน้นปุ่มปิดขนาดเล็กบนโฆษณาและภาพซ้อนทับ",
+        "description": "Description of what the extension does."
+    }
+}

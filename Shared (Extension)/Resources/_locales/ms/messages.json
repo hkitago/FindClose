@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "CariTutup",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Menyerlahkan butang tutup kecil pada iklan dan tindanan.",
+        "description": "Description of what the extension does."
+    }
+}

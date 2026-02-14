@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "HittaStäng",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Markerar små stängningsknappar på annonser och överlägg.",
+        "description": "Description of what the extension does."
+    }
+}

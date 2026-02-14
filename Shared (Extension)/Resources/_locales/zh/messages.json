@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "找关闭",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "突出显示广告和叠加层上的微小关闭按钮。",
+        "description": "Description of what the extension does."
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "מצא סגור",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "מדגיש כפתורי סגירה זעירים בפרסומות ובשכבות על.",
+        "description": "Description of what the extension does."
+    }
+}

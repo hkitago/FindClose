@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "TrovaChiudi",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Evidenzia i piccoli pulsanti di chiusura su annunci e sovrapposizioni.",
+        "description": "Description of what the extension does."
+    }
+}

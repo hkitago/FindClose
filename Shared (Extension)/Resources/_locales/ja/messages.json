@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "探せ閉ボタン",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "広告やオーバーレイの小さな閉じるボタンを強調表示",
+        "description": "Description of what the extension does."
+    }
+}

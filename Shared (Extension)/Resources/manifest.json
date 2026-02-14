@@ -16,18 +16,22 @@
 
     "background": {
         "scripts": [ "background.js" ],
-        "type": "module"
+        "type": "module",
+        "persistent": false
     },
 
     "content_scripts": [{
+        "css": ["findclose-ext.css"],
         "js": [ "content.js" ],
-        "matches": [ "*://example.com/*" ]
+        "matches": [ "http://*/*", "https://*/*" ],
+        "all_frames": true,
+        "match_about_blank": true,
+        "run_at": "document_start"
     }],
 
     "action": {
-        "default_popup": "popup.html",
         "default_icon": "images/toolbar-icon.svg"
     },
 
-    "permissions": [ ]
+    "permissions": [ "activeTab", "tabs", "storage", "webNavigation" ]
 }

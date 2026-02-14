@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "NájsťZavrieť",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Zvýrazňuje drobné tlačidlá na zatvorenie v reklamách a prekrytiach.",
+        "description": "Description of what the extension does."
+    }
+}

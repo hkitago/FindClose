@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "بحث إغلاق",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "يبرز أزرار الإغلاق الصغيرة في الإعلانات والتراكبات.",
+        "description": "Description of what the extension does."
+    }
+}

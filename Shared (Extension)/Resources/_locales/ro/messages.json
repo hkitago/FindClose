@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "GăseșteÎnchide",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Evidențiază butoanele mici de închidere din reclame și suprapuneri.",
+        "description": "Description of what the extension does."
+    }
+}

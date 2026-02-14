@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "ΕύρεσηΚλεισίματος",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Επισημαίνει μικροσκοπικά κουμπιά κλεισίματος σε διαφημίσεις και επικαλύψεις.",
+        "description": "Description of what the extension does."
+    }
+}

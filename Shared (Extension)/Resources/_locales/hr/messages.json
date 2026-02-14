@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "NađiZatvori",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Ističe sitne gumbe za zatvaranje u oglasima i slojevima.",
+        "description": "Description of what the extension does."
+    }
+}

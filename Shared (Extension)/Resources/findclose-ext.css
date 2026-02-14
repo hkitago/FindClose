@@ -1,0 +1,55 @@
+:root { --fc-duration: 0.3s; }
+
+.findclose-btn {
+  transition: transform var(--fc-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow var(--fc-duration) ease,
+              background-color var(--fc-duration) ease !important;
+  transform-origin: center center !important;
+}
+
+@keyframes rotate { to { --angle: 360deg; } }
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.findclose-active {
+  transform: scale(1.5) !important;
+  --angle: 0deg;
+  animation: rotate 2.5s linear infinite;
+  z-index: 2147483647 !important;
+  box-shadow: 0 0 10px rgb(0 0 0/0.5) !important;
+  border-radius: 15px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  border: 5px solid transparent !important;
+  background:
+    linear-gradient(rgb(255 255 255/0.9), rgb(255 255 255/0.9)) padding-box,
+    conic-gradient(
+      from var(--angle),
+      #ff3366, #ffcc33, #33ff99, #3366ff, #cc33ff, #ff3366
+    ) border-box !important;
+    color: black;
+
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .findclose-active {
+    background:
+      linear-gradient(rgb(0 0 0/0.9), rgb(0 0 0/0.9)) padding-box,
+      conic-gradient(
+        from var(--angle),
+        #ff3366, #ffcc33, #33ff99, #3366ff, #cc33ff, #ff3366
+      ) border-box !important;
+    color: white;
+    box-shadow: 0 0 10px rgb(255 255 255/0.5) !important;
+  }
+}

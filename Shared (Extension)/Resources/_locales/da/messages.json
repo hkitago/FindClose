@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "FindLuk",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Fremhæver små lukkeknapper på annoncer og overlejringer.",
+        "description": "Description of what the extension does."
+    }
+}

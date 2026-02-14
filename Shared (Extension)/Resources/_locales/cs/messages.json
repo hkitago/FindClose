@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "NajdiZavřít",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Zvýrazňuje drobná tlačítka pro zavření v reklamách a překryvech.",
+        "description": "Description of what the extension does."
+    }
+}

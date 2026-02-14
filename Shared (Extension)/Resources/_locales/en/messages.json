@@ -4,7 +4,7 @@
         "description": "The display name for the extension."
     },
     "extension_description": {
-        "message": "This is FindClose. You should tell us what your extension does here.",
+        "message": "Highlights tiny close buttons on ads and overlays.",
         "description": "Description of what the extension does."
     }
 }
