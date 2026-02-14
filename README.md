@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/icon.svg" height="36" valign="bottom"/> FindClose for Safari Extension
+# <img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/icon-48.png" height="36" valign="bottom"/> FindClose for Safari Extension
 
 This Safari extension makes tiny close buttons on ads and overlays easy to spot. It highlights hard-to-find close icons in real-time, transforming the frustrating hunt for hidden buttons into an instant, effortless tap that clears your screen.
 
