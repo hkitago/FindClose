@@ -1256,6 +1256,7 @@
           document.addEventListener('click', () => shaker.start(), { once: true });
         } else {
           try {
+            if (!isIOS) return;
             waitForAnimations(() => {
               shakeDocument();
             }, {
