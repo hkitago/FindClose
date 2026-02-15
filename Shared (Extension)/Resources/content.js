@@ -92,10 +92,10 @@
   // ========================================
   // Close button detection
   // ========================================
-  const CLOSE_SYMBOL_PATTERN = /[✕×✖╳✗✘❌]/;
-  const CLOSE_SYMBOL_GLOBAL_PATTERN = /[✕×✖╳✗✘❌]/g;
-  const PSEUDO_CLOSE_SYMBOL_PATTERN = /^["']?\s*(?:[✕×✖╳✗✘❌xX]|\\00d7|\\2715|\\2716)\s*["']?$/;
-  const WRAPPER_ONLY_PATTERN = /^[\s"'`()[\]{}<>「」『』【】.,:;|/\\+-]*$/;
+  const CLOSE_SYMBOL_PATTERN = new RegExp("[\\u2715\\u00D7\\u2716\\u2573\\u2717\\u2718\\u274C]");
+  const CLOSE_SYMBOL_GLOBAL_PATTERN = new RegExp("[\\u2715\\u00D7\\u2716\\u2573\\u2717\\u2718\\u274C]", "g");
+  const PSEUDO_CLOSE_SYMBOL_PATTERN = new RegExp("^[\"']?\\s*(?:[\\u2715\\u00D7\\u2716\\u2573\\u2717\\u2718\\u274C\\u0078\\u0058]|\\\\00d7|\\\\2715|\\\\2716)\\s*[\"']?$");
+  const WRAPPER_ONLY_PATTERN = new RegExp("^[\\s\"'`()[\\]{}<>\\u300C\\u300D\\u300E\\u300F\\u3010\\u3011.,:;|/\\\\+-]*$");
 
   const STRONG_CLOSE_TEXT_PATTERNS = [
     /\b(close|close ad|dismiss|dismiss ad|cancel|skip ad|luk|lukke|annuller|schließen|abbrechen|cerrar|cancelar|sulje|peruuta|fermer|annuler|tutup|batal|chiudi|annulla|lukk|avbryt|sluiten|annuleren|fechar|stäng|kapat|iptal)\b/i,
@@ -975,10 +975,16 @@
     duration = 300,
     amplitude = 15,
     frequency = 30,
-    axis = 'x', // 'x' | 'y' | 'both'
+    axis = 'x',
   } = {}) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return { cancel: () => {} };
+    }
+
     const target = document.documentElement;
+    const originalTransform = target.style.transform;
     const start = performance.now();
+    let rafId = null;
 
     const animate = (time) => {
       const elapsed = time - start;
@@ -999,13 +1005,24 @@
            : 0;
 
         target.style.transform = `translate(${x}px, ${y}px)`;
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
       } else {
-        target.style.transform = '';
+        target.style.transform = originalTransform;
+        rafId = null;
       }
     };
 
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+
+    return {
+     cancel: () => {
+       if (rafId !== null) {
+         cancelAnimationFrame(rafId);
+         target.style.transform = originalTransform;
+         rafId = null;
+       }
+     },
+    };
   };
 
   const getViewportDiagonal = () => {
