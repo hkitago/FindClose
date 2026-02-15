@@ -12,7 +12,7 @@
   const ACTIVE_CLASS_NAME = 'findclose-active';
   const FINDCLOSE_INLINE_STYLE_ID = 'findclose-inline-style';
   
-  const SHAKER_THRESHOLD = 70;
+  const SHAKER_THRESHOLD = 60;
   const SHAKER_TIMEOUT = 2500;
   const MOUSE_SHAKE_WINDOW_MS = 750;
   const MOUSE_SHAKE_TIMEOUT_SMALL = 2000;
@@ -26,6 +26,7 @@
   const MOUSE_SHAKE_MIN_SPEED = 1200;
 
   const isIPadOS = () => navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const isIOS = /iPhone|iPod/.test(navigator.userAgent);
   const isMacOS = () => navigator.platform.includes('Mac') && !isIPadOS();
 
   const CSS_FILE_PATH = '/findclose-ext.css';
@@ -564,8 +565,8 @@
           if (permissionState === 'granted') {
             if (this.started) return true;
             this.started = true;
-            this.onShakeDocument();
             window.addEventListener('devicemotion', this.handleMotion, { capture: true });
+            this.onShakeDocument();
             return true;
           } else {
             console.warn('Deny DeviceMotionEvent Permission.');
@@ -575,8 +576,8 @@
           return false;
         }
       } else {
-        window.addEventListener('devicemotion', this.handleMotion, { capture: true });
         this.started = true;
+        window.addEventListener('devicemotion', this.handleMotion, { capture: true });
         return true;
       }
     }
@@ -876,7 +877,6 @@
         activeCountBefore: activeElements.length,
         buttons: closeButtonBriefs
       });
-
     }
 
     closeButtons.forEach(el => {
@@ -895,6 +895,7 @@
         addedElements.push(toElementBrief(el));
       }
     });
+
     if (DEBUG_FINDCLOSE) {
       console.debug('[FindClose][activeElements]', {
         source,
@@ -971,7 +972,7 @@
   };
 
   const shakeDocument = ({
-    duration = 600,
+    duration = 300,
     amplitude = 15,
     frequency = 30,
     axis = 'x', // 'x' | 'y' | 'both'
@@ -1090,6 +1091,111 @@
     }
   };
 
+  const waitForAnimations = (callback, options = {}) => {
+    const {
+      timeout = 5000,
+      debounce = 100,
+      noAnimationTimeout = 300,
+      initialRAF = true,
+    } = options;
+
+    let timeoutId;
+    let debounceId;
+    let noAnimId;
+    let observer;
+    let isCompleted = false;
+    let animationDetected = false;
+
+    const safeCallback = () => {
+      if (isCompleted) return;
+      isCompleted = true;
+      try { callback(); } catch (_) {}
+    };
+
+    const cleanup = () => {
+      if (isCompleted) return;
+      clearTimeout(timeoutId);
+      clearTimeout(debounceId);
+      clearTimeout(noAnimId);
+      if (observer) observer.disconnect();
+    };
+
+    const runCheck = () => {
+      if (isCompleted) return;
+
+      clearTimeout(debounceId);
+      debounceId = setTimeout(() => {
+        if (isCompleted) return;
+
+        const animations = document.getAnimations();
+
+        if (animations.length > 0) {
+          animationDetected = true;
+          Promise.all(animations.map(a => a.finished.catch(() => {})))
+            .then(() => {
+              runCheck();
+            });
+        } else if (animationDetected) {
+          cleanup();
+          safeCallback();
+        }
+      }, debounce);
+    };
+
+    timeoutId = setTimeout(() => {
+      cleanup();
+      safeCallback();
+    }, timeout);
+
+    observer = new MutationObserver(runCheck);
+    const observeTarget = document.body || document.documentElement;
+    if (observeTarget) {
+      observer.observe(observeTarget, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+    }
+
+    const initialCheck = () => {
+      if (isCompleted) return;
+
+      const animations = document.getAnimations();
+      if (animations.length === 0) {
+        // No animations right now; arm a short timer. If nothing starts, fire callback.
+        noAnimId = setTimeout(() => {
+          if (isCompleted) return;
+          // Double-check before completing to avoid a race if something just started
+          if (document.getAnimations().length === 0) {
+            cleanup();
+            safeCallback();
+          } else {
+            // Animations started during grace period; switch to normal flow
+            runCheck();
+          }
+        }, noAnimationTimeout);
+      } else {
+        // Animations already running; enter the normal wait loop
+        animationDetected = true;
+        runCheck();
+      }
+    };
+
+    if (initialRAF) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(initialCheck);
+      });
+    } else {
+      initialCheck();
+    }
+
+    return () => {
+      cleanup();
+      isCompleted = true;
+    };
+  };
+                                   
   // ========================================
   // Event listeners
   // ========================================
@@ -1127,6 +1233,14 @@
   // ========================================
   // Initialization
   // ========================================
+  (async () => {
+    try {
+      browser.runtime.sendMessage({ type: 'UPDATE_ICON' });
+    } catch (error) {
+      console.error('[FindCloseExtension] Failed to update icon:', error);
+    }
+  })();
+
   let isInitialized = false;
   const initializeContent = async () => {
     if (isInitialized) return;
@@ -1134,7 +1248,6 @@
 
     try {
       await refreshConfigFromStorage('initialize');
-      browser.runtime.sendMessage({ type: 'UPDATE_ICON' });
 
       if (config.isFindCloseEnabled && shouldHandleShakeInThisFrame()) {
         const started = await shaker.start();
@@ -1142,10 +1255,17 @@
         if (!started) {
           document.addEventListener('click', () => shaker.start(), { once: true });
         } else {
-          console.debug('[FindCloseExtension] Shake detection started automatically.');
+          try {
+            waitForAnimations(() => {
+              shakeDocument();
+            }, {
+              noAnimationTimeout: 300
+            });
+          } catch (error) {
+            console.warn('[FindCloseExtension] Failed to trigger shakeDocument:', error);
+          }
         }
       }
-
     } catch (error) {
       console.error('[FindCloseExtension] Failed to isInitialize:', error);
     }
