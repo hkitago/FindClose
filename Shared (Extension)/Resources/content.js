@@ -542,6 +542,7 @@
       this.timeout = options.timeout || 1000;
       this.onShakeStart = options.onShakeStart || (() => {});
       this.onShakeEnd = options.onShakeEnd || (() => {});
+      this.onShakeDocument = options.onShakeDocument || (() => {});
 
       this.lastTime = 0;
       this.lastX = null;
@@ -562,8 +563,9 @@
           const permissionState = await DeviceMotionEvent.requestPermission();
           if (permissionState === 'granted') {
             if (this.started) return true;
-            window.addEventListener('devicemotion', this.handleMotion, { capture: true });
             this.started = true;
+            this.onShakeDocument();
+            window.addEventListener('devicemotion', this.handleMotion, { capture: true });
             return true;
           } else {
             console.warn('Deny DeviceMotionEvent Permission.');
@@ -645,8 +647,8 @@
     async start() {
       if (typeof PointerEvent === 'undefined') return false;
       if (this.started) return true;
-      window.addEventListener('pointermove', this.handlePointerMove, { capture: true, passive: true });
       this.started = true;
+      window.addEventListener('pointermove', this.handlePointerMove, { capture: true, passive: true });
       return true;
     }
 
@@ -968,6 +970,43 @@
     });
   };
 
+  const shakeDocument = ({
+    duration = 600,
+    amplitude = 15,
+    frequency = 30,
+    axis = 'x', // 'x' | 'y' | 'both'
+  } = {}) => {
+    const target = document.documentElement;
+    const start = performance.now();
+
+    const animate = (time) => {
+      const elapsed = time - start;
+      const progress = elapsed / duration;
+
+      if (progress < 1) {
+        const damping = 1 - progress;
+        const angle = progress * Math.PI * frequency;
+
+        const x =
+         axis === 'x' || axis === 'both'
+           ? Math.sin(angle) * amplitude * damping
+           : 0;
+
+        const y =
+         axis === 'y' || axis === 'both'
+           ? Math.cos(angle) * amplitude * damping
+           : 0;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        requestAnimationFrame(animate);
+      } else {
+        target.style.transform = '';
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+
   const getViewportDiagonal = () => {
     const width = Math.max(window.innerWidth || 0, 1);
     const height = Math.max(window.innerHeight || 0, 1);
@@ -999,7 +1038,8 @@
       threshold: SHAKER_THRESHOLD,
       timeout: SHAKER_TIMEOUT,
       onShakeStart: handleShakeStart,
-      onShakeEnd: handleShakeEnd
+      onShakeEnd: handleShakeEnd,
+      onShakeDocument: shakeDocument
     });
   };
 
@@ -1011,116 +1051,6 @@
       shaker.updateTimeout(getMouseShakeTimeoutByViewport());
     });
   }
-
-  // ========================================
-  // Click filter helper (request permission only from non-clickable area taps)
-  // ========================================
-  const isClickableAreaInteraction = (event) => {
-    const INTERACTIVE_SELECTOR = [
-      'a[href]',
-      'button:not([disabled])',
-      'input:not([type="hidden"]):not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      'summary',
-      'label[for]',
-      '[role="button"]',
-      '[role="link"]',
-      '[onclick]',
-      '[contenteditable=""]',
-      '[contenteditable="true"]',
-      '[tabindex]:not([tabindex="-1"])'
-    ].join(',');
-
-    try {
-      const path = typeof event.composedPath === 'function' ? event.composedPath() : [event.target];
-      for (const node of path) {
-        if (!(node && node.nodeType === 1)) continue; // Element nodes only
-        if (typeof node.closest === 'function') {
-          if (node.closest(INTERACTIVE_SELECTOR)) return true;
-        }
-      }
-    } catch (e) {
-      // fall through
-    }
-    return false;
-  };
-
-  
-  // Click permission arming (re-arm on clickable-area taps and failures)
-  let isPermissionClickArmed = false;
-  let disarmMotionPermissionClick = null;
-  const armMotionPermissionClickOnce = () => {
-    // Do not arm if already started or not enabled/eligible.
-    if (shaker.started || !config.isFindCloseEnabled || !shouldHandleShakeInThisFrame()) {
-      if (typeof disarmMotionPermissionClick === 'function') {
-        disarmMotionPermissionClick();
-      }
-      return;
-    }
-    if (isPermissionClickArmed && typeof disarmMotionPermissionClick === 'function') return;
-    isPermissionClickArmed = true;
-
-    const removeListeners = [];
-    const cleanup = () => {
-      removeListeners.forEach((remove) => remove());
-      removeListeners.length = 0;
-      isPermissionClickArmed = false;
-      disarmMotionPermissionClick = null;
-    };
-    disarmMotionPermissionClick = cleanup;
-
-    const handler = (event) => {
-      if (!isPermissionClickArmed) return;
-      cleanup();
-
-      // User may have toggled settings after this listener was armed.
-      if (!config.isFindCloseEnabled || !shouldHandleShakeInThisFrame() || shaker.started) {
-        return;
-      }
-
-      // Ignore untrusted/synthetic events and non-primary pointer activations.
-      if (event?.isTrusted === false) {
-        armMotionPermissionClickOnce();
-        return;
-      }
-      if (event?.type === 'pointerup' && typeof event.button === 'number' && event.button !== 0) {
-        armMotionPermissionClickOnce();
-        return;
-      }
-
-      // Clickable area interaction: re-arm for the next non-clickable area tap.
-      if (isClickableAreaInteraction(event)) {
-        armMotionPermissionClickOnce();
-        return;
-      }
-
-      const p = shaker.start();
-      Promise.resolve(p).then((started) => {
-        if (!started) {
-          // Permission denied or not granted — re-arm for another attempt
-          armMotionPermissionClickOnce();
-        }
-      }).catch(() => {
-        // On error, re-arm to allow retry
-        armMotionPermissionClickOnce();
-      });
-    };
-
-    const listen = (target, type) => {
-      const options = type === 'click'
-        ? { capture: true }
-        : { capture: true, passive: true };
-      target.addEventListener(type, handler, options);
-      removeListeners.push(() => target.removeEventListener(type, handler, { capture: true }));
-    };
-
-    [window, document].forEach((target) => {
-      listen(target, 'pointerup');
-      listen(target, 'touchend');
-      listen(target, 'click');
-    });
-  };
 
   // ========================================
   // Utils for frame
@@ -1168,22 +1098,10 @@
       config = { ...DEFAULT_SETTINGS, ...changes.settings.newValue };
 
       if (config.isFindCloseEnabled && shouldHandleShakeInThisFrame()) {
-        const started = await shaker.start();
-
-        if (!started) {
-          armMotionPermissionClickOnce();
-        } else {
-          if (typeof disarmMotionPermissionClick === 'function') {
-            disarmMotionPermissionClick();
-          }
-          console.warn('[FindCloseExtension] Shake detection started automatically.');
-        }
+        await shaker.start();
       }
 
       if (!config.isFindCloseEnabled && shouldHandleShakeInThisFrame()) {
-        if (typeof disarmMotionPermissionClick === 'function') {
-          disarmMotionPermissionClick();
-        }
         shaker.stop();
       }
     }
@@ -1194,13 +1112,16 @@
 
     await refreshConfigFromStorage('visibilitychange');
     browser.runtime.sendMessage({ type: 'UPDATE_ICON' });
-    // Re-arm permission click handler when tab becomes visible again
-    armMotionPermissionClickOnce();
+    if (config.isFindCloseEnabled && shouldHandleShakeInThisFrame()) {
+      await shaker.start();
+    }
   });
 
   window.addEventListener('pageshow', (event) => {
     if (!event.persisted) return;
-    armMotionPermissionClickOnce();
+    if (config.isFindCloseEnabled && shouldHandleShakeInThisFrame()) {
+      shaker.start();
+    }
   });
 
   // ========================================
@@ -1219,12 +1140,9 @@
         const started = await shaker.start();
 
         if (!started) {
-          armMotionPermissionClickOnce();
+          document.addEventListener('click', () => shaker.start(), { once: true });
         } else {
-          if (typeof disarmMotionPermissionClick === 'function') {
-            disarmMotionPermissionClick();
-          }
-          console.warn('[FindCloseExtension] Shake detection started automatically.');
+          console.debug('[FindCloseExtension] Shake detection started automatically.');
         }
       }
 
