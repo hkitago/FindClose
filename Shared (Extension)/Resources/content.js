@@ -12,7 +12,7 @@
   const ACTIVE_CLASS_NAME = 'findclose-active';
   const FINDCLOSE_INLINE_STYLE_ID = 'findclose-inline-style';
   
-  const SHAKER_THRESHOLD = 50;
+  const SHAKER_THRESHOLD = 70;
   const SHAKER_TIMEOUT = 2500;
   const MOUSE_SHAKE_WINDOW_MS = 750;
   const MOUSE_SHAKE_TIMEOUT_SMALL = 2000;
@@ -111,7 +111,7 @@
   const ATTR_CLOSE_KEYWORDS = new Set([
     'close', 'closead', 'closebtn', 'closebutton', 'closeicon', 'closemark',
     'btnclose', 'iconclose', 'dismiss', 'cancel', 'modalclose', 'popupclose',
-    'adclose', 'xclose', 'btnx'
+    'adclose', 'xclose', 'btnx', 'batsu',
   ]);
 
   const AD_CONTEXT_KEYWORDS = new Set([
@@ -467,6 +467,7 @@
       '[role="button"]',
       '[onclick]',
       '[tabindex]',
+      '[id="batsu"]',
       // fallback
       '[class*="close" i]',
       '[class*="dismiss" i]',
