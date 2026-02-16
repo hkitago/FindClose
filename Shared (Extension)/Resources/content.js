@@ -1066,47 +1066,36 @@
   };
 
   // Click filter helper for requesting permission only from non-clickable area taps
-  const isInteractionTarget = (el) => {
-    const tagName = el.tagName;
-    
-    if (el.disabled || el.hasAttribute('disabled')) return false;
-    
-    if (tagName === 'BUTTON') return true;
-    if (tagName === 'A') return true;
-    if (tagName === 'SELECT') return true;
-    if (tagName === 'TEXTAREA') return true;
-    if (tagName === 'SUMMARY') return true;
-    
-    if (tagName === 'LABEL' && el.hasAttribute('for')) return true;
-    
-    if (tagName === 'INPUT') {
-      const type = (el.type || 'text').toLowerCase();
-      if (type === 'hidden') return false;
-      const clickableTypes = ['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'image', 'color', 'range'];
-      if (clickableTypes.includes(type)) return true;
+  const isInteractionTarget = (event) => {
+    const path = event.composedPath();
+
+    for (const el of path) {
+      if (!(el instanceof HTMLElement || el instanceof SVGElement)) continue;
+
+      const tagName = el.tagName.toUpperCase();
+
+      const interactiveTags = ['A', 'BUTTON', 'SELECT', 'TEXTAREA', 'INPUT', 'SUMMARY', 'LABEL', 'DETAILS'];
+      if (interactiveTags.includes(tagName)) {
+        if (tagName === 'INPUT' && el.type?.toLowerCase() === 'hidden') continue;
+        if (el.disabled || el.hasAttribute('disabled')) continue;
+        return true;
+      }
+
+      const role = el.getAttribute('role');
+      const clickableRoles = ['button', 'link', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'option', 'treeitem'];
+      if (role && clickableRoles.includes(role.toLowerCase())) return true;
+      if (el.isContentEditable || el.getAttribute('contenteditable') === 'true') return true;
+      if (el.hasAttribute('onclick') || typeof el.onclick === 'function') return true;
+      if (el.hasAttribute('tabindex') && el.tabIndex >= 0) return true;
+      if (el.hasAttribute('data-dismiss') || el.hasAttribute('data-close')) return true;
+
+      const style = window.getComputedStyle(el);
+      if (style.cursor === 'pointer' && style.pointerEvents !== 'none') {
+        if (tagName !== 'BODY' && tagName !== 'HTML') return true;
+      }
     }
-    
-    if (el.isContentEditable) return true;
-    const contenteditable = el.getAttribute('contenteditable');
-    if (contenteditable === '' || contenteditable === 'true') return true;
-    
-    const role = el.getAttribute('role');
-    if (role) {
-      const clickableRoles = ['button', 'link', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'option'];
-      if (clickableRoles.includes(role)) return true;
-    }
-    
-    if (typeof el.onclick === 'function') return true;
-    if (el.hasAttribute('onclick')) return true;
-    
-    if (el.hasAttribute('tabindex') && el.tabIndex >= 0) return true;
-    
-    if (el.hasAttribute('data-dismiss') || el.hasAttribute('data-close')) return true;
-    
-    const ownerWindow = getOwnerWindow(el);
-    const style = ownerWindow.getComputedStyle(el);
-    if (style.pointerEvents === 'none') return false;
-    return style.cursor === 'pointer';
+
+    return false;
   };
 
   const getViewportDiagonal = () => {
@@ -1227,20 +1216,16 @@
 
       const animations = document.getAnimations();
       if (animations.length === 0) {
-        // No animations right now; arm a short timer. If nothing starts, fire callback.
         noAnimId = setTimeout(() => {
           if (isCompleted) return;
-          // Double-check before completing to avoid a race if something just started
           if (document.getAnimations().length === 0) {
             cleanup();
             safeCallback();
           } else {
-            // Animations started during grace period; switch to normal flow
             runCheck();
           }
         }, noAnimationTimeout);
       } else {
-        // Animations already running; enter the normal wait loop
         animationDetected = true;
         runCheck();
       }
@@ -1356,7 +1341,7 @@
 
         if (!started) {
           document.addEventListener('click', (event) => {
-            if (isInteractionTarget(event.target)) return false;
+            if (isInteractionTarget(event)) return false;
             shaker.start();
           }, { once: true });
         } else {
