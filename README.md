@@ -1,8 +1,8 @@
 # <img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/icon-48.png" height="36" valign="bottom"/> FindClose for Safari Extension
 
-This Safari extension makes tiny close buttons on ads and overlays easy to spot. It highlights hard-to-find close icons in real-time, transforming the frustrating hunt for hidden buttons into an instant, effortless tap that clears your screen.
+This Safari extension makes tiny close buttons on ads and overlays easier to spot. It highlights hard-to-find close icons in real time, helping you locate hidden buttons quickly and clear your screen with ease.
 
-Perfect for anyone who wants a cleaner, more accessible web. Whether small buttons are difficult for you to see or tap, or you simply want less clutter while browsing, this extension gives you quick, stress-free control over intrusive content.
+Ideal for anyone who prefers a cleaner, more accessible web experience. Whether small buttons are difficult to see or you simply want less visual clutter, this extension offers a calm, effortless way to manage overlays and ads.
 
 ## Installation & Uninstallation
 
@@ -19,10 +19,11 @@ To uninstall the extension, similarly to the installation process, toggle the ex
 
 1. Open a webpage in Safari.
 2. Tap or click the icon next to the address bar and choose the extension.
-3. When enabled:
+3. When enabled and you encounter tiny buttons:
 
 📱 iOS / iPadOS
-- Tap a blank area of the page (avoiding links or buttons) to allow motion sensor permissions.
+- Tap a blank area of the page (avoiding links or buttons) to allow motion sensor permissions. 
+  (A subtle movement of the current page indicates that motion access is enabled.)
 - Shake your device gently.
 
 💻 macOS
@@ -39,7 +40,7 @@ To uninstall the extension, similarly to the installation process, toggle the ex
 > Shake gestures are not detected during scrolling.
 
 > [!CAUTION]
-> Close buttons inside cross-origin iframes are not accessible.
+> Some close controls cannot be highlighted due to browser security restrictions or custom UI designs, such as cross-origin iframes or arrow-based controls (which is technically called Shadow DOMs).
 
 ## Latest Version
 
