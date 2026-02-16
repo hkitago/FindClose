@@ -24,6 +24,7 @@
   border-radius: 15px !important;
   min-width: 60px !important;
   min-height: 60px !important;
+  padding: 5px;
   cursor: pointer !important;
   pointer-events: auto !important;
   touch-action: manipulation !important;
