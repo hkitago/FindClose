@@ -1,5 +1,5 @@
 (() => {
-  const DEBUG_FINDCLOSE = true;
+  const DEBUG_FINDCLOSE = false;
 
   const DEFAULT_SETTINGS = {
     isFindCloseEnabled: false,
@@ -12,9 +12,9 @@
   const ACTIVE_CLASS_NAME = 'findclose-active';
   const FINDCLOSE_INLINE_STYLE_ID = 'findclose-inline-style';
   
-  const SHAKER_THRESHOLD = 60;
+  const SHAKER_THRESHOLD = 80;
   const SHAKER_TIMEOUT = 2500;
-  const MOUSE_SHAKE_WINDOW_MS = 750;
+  const MOUSE_SHAKE_WINDOW_MS = 800;
   const MOUSE_SHAKE_TIMEOUT_SMALL = 2000;
   const MOUSE_SHAKE_TIMEOUT_MEDIUM = 2500;
   const MOUSE_SHAKE_TIMEOUT_LARGE = 3000;
@@ -988,22 +988,26 @@
     if (!shouldHandleShakeInThisFrame()) return;
 
     runCloseButtonScan('shake-top');
-
-    // Keep debug dump available in production and synchronize highlighting to all frames.
-    browser.runtime.sendMessage({ type: 'FINDCLOSE_SHAKE_START' }).catch((error) => {
-      console.warn('[FindCloseExtension] Failed to notify shake-start to background:', error);
-    });
+    
+    if (DEBUG_FINDCLOSE) {
+      // Keep debug dump available in production and synchronize highlighting to all frames.
+      browser.runtime.sendMessage({ type: 'FINDCLOSE_SHAKE_START' }).catch((error) => {
+        console.warn('[FindCloseExtension] Failed to notify shake-start to background:', error);
+      });
+    }
   };
 
   const handleShakeEnd = () => {
     if (!shouldHandleShakeInThisFrame()) return;
 
     clearCloseButtonScan();
-
-    // Synchronize clear state to all frames.
-    browser.runtime.sendMessage({ type: 'FINDCLOSE_SHAKE_END' }).catch((error) => {
-      console.warn('[FindCloseExtension] Failed to notify shake-end to background:', error);
-    });
+    
+    if (DEBUG_FINDCLOSE) {
+      // Synchronize clear state to all frames.
+      browser.runtime.sendMessage({ type: 'FINDCLOSE_SHAKE_END' }).catch((error) => {
+        console.warn('[FindCloseExtension] Failed to notify shake-end to background:', error);
+      });
+    }
   };
 
   // Effect for granting permission
@@ -1357,7 +1361,7 @@
           }, { once: true });
         } else {
           try {
-            if (!isIOS) return;
+            if (isMacOS) return;
             waitForAnimations(() => {
               shakeDocument();
             }, {
