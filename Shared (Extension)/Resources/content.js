@@ -1,5 +1,5 @@
 (() => {
-  const DEBUG_FINDCLOSE = false;
+  const DEBUG_FINDCLOSE = true;
 
   const DEFAULT_SETTINGS = {
     isFindCloseEnabled: false,
@@ -59,6 +59,7 @@
         border-radius: 15px !important;
         min-width: 60px !important;
         min-height: 60px !important;
+        padding: 5px;
         cursor: pointer !important;
         pointer-events: auto !important;
         touch-action: manipulation !important;
@@ -971,6 +972,7 @@
     });
   };
 
+  // Effect for granting permission
   const shakeDocument = ({
     duration = 300,
     amplitude = 15,
@@ -1025,6 +1027,50 @@
     };
   };
 
+  // Click filter helper for requesting permission only from non-clickable area taps
+  const isInteractionTarget = (el) => {
+    const tagName = el.tagName;
+    
+    if (el.disabled || el.hasAttribute('disabled')) return false;
+    
+    if (tagName === 'BUTTON') return true;
+    if (tagName === 'A') return true;
+    if (tagName === 'SELECT') return true;
+    if (tagName === 'TEXTAREA') return true;
+    if (tagName === 'SUMMARY') return true;
+    
+    if (tagName === 'LABEL' && el.hasAttribute('for')) return true;
+    
+    if (tagName === 'INPUT') {
+      const type = (el.type || 'text').toLowerCase();
+      if (type === 'hidden') return false;
+      const clickableTypes = ['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'image', 'color', 'range'];
+      if (clickableTypes.includes(type)) return true;
+    }
+    
+    if (el.isContentEditable) return true;
+    const contenteditable = el.getAttribute('contenteditable');
+    if (contenteditable === '' || contenteditable === 'true') return true;
+    
+    const role = el.getAttribute('role');
+    if (role) {
+      const clickableRoles = ['button', 'link', 'checkbox', 'radio', 'switch', 'tab', 'menuitem', 'option'];
+      if (clickableRoles.includes(role)) return true;
+    }
+    
+    if (typeof el.onclick === 'function') return true;
+    if (el.hasAttribute('onclick')) return true;
+    
+    if (el.hasAttribute('tabindex') && el.tabIndex >= 0) return true;
+    
+    if (el.hasAttribute('data-dismiss') || el.hasAttribute('data-close')) return true;
+    
+    const ownerWindow = getOwnerWindow(el);
+    const style = ownerWindow.getComputedStyle(el);
+    if (style.pointerEvents === 'none') return false;
+    return style.cursor === 'pointer';
+  };
+
   const getViewportDiagonal = () => {
     const width = Math.max(window.innerWidth || 0, 1);
     const height = Math.max(window.innerHeight || 0, 1);
@@ -1070,44 +1116,7 @@
     });
   }
 
-  // ========================================
-  // Utils for frame
-  // ========================================
-  const extractDomain = (url) => {
-    try {
-      return new URL(url).hostname;
-    } catch (error) {
-      return url;
-    }
-  };
-
-  const getTopFrameHostname = () => {
-    if (window === window.top) return window.location.hostname;
-
-    const ancestorOrigin = window.location.ancestorOrigins?.[0];
-    if (ancestorOrigin) return extractDomain(ancestorOrigin);
-
-    if (document.referrer) return extractDomain(document.referrer);
-
-    return window.location.hostname;
-  };
-
-  const getCurrentSiteKey = () => {
-    const topFrameHost = getTopFrameHostname();
-    return extractDomain(topFrameHost);
-  };
-
-  const refreshConfigFromStorage = async (reason = 'unknown') => {
-    try {
-      const stored = await browser.storage.local.get('settings');
-      config = { ...DEFAULT_SETTINGS, ...stored.settings };
-      return true;
-    } catch (error) {
-      console.warn(`[FindCloseExtension] Failed to load settings (${reason}):`, error);
-      return false;
-    }
-  };
-
+  // Util for running effect of shakeDocument
   const waitForAnimations = (callback, options = {}) => {
     const {
       timeout = 5000,
@@ -1212,6 +1221,44 @@
       isCompleted = true;
     };
   };
+
+  // ========================================
+  // Utils for frame
+  // ========================================
+  const extractDomain = (url) => {
+    try {
+      return new URL(url).hostname;
+    } catch (error) {
+      return url;
+    }
+  };
+
+  const getTopFrameHostname = () => {
+    if (window === window.top) return window.location.hostname;
+
+    const ancestorOrigin = window.location.ancestorOrigins?.[0];
+    if (ancestorOrigin) return extractDomain(ancestorOrigin);
+
+    if (document.referrer) return extractDomain(document.referrer);
+
+    return window.location.hostname;
+  };
+
+  const getCurrentSiteKey = () => {
+    const topFrameHost = getTopFrameHostname();
+    return extractDomain(topFrameHost);
+  };
+
+  const refreshConfigFromStorage = async (reason = 'unknown') => {
+    try {
+      const stored = await browser.storage.local.get('settings');
+      config = { ...DEFAULT_SETTINGS, ...stored.settings };
+      return true;
+    } catch (error) {
+      console.warn(`[FindCloseExtension] Failed to load settings (${reason}):`, error);
+      return false;
+    }
+  };
                                    
   // ========================================
   // Event listeners
@@ -1270,7 +1317,10 @@
         const started = await shaker.start();
 
         if (!started) {
-          document.addEventListener('click', () => shaker.start(), { once: true });
+          document.addEventListener('click', (event) => {
+            if (isInteractionTarget(event.target)) return false;
+            shaker.start();
+          }, { once: true });
         } else {
           try {
             if (!isIOS) return;
