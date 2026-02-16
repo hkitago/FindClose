@@ -271,6 +271,18 @@
     return pseudoCheck('::before') || pseudoCheck('::after');
   };
 
+  const containsInlineSVG = (el) => {
+    if (!el) return false;
+    if (el.tagName === 'SVG') return true;
+    return !!el.querySelector?.('svg');
+  };
+
+  const hasMeaningfulTextContent = (el) => {
+    // Reuse existing text candidate collection; it already filters empty strings
+    const candidates = collectTextCandidates(el);
+    return candidates.length > 0;
+  };
+
   const isElementVisible = (el) => {
     if (!el || !el.isConnected) return false;
 
@@ -416,6 +428,8 @@
       isNearContainerTopLeft(el, rect);
     const clickable = isLikelyClickable(el);
 
+    const graphicOnly = containsInlineSVG(el) && !hasMeaningfulTextContent(el);
+
     const directCloseSignal =
       textSignals.hasStrongCloseText ||
       textSignals.hasSymbol ||
@@ -438,7 +452,22 @@
       cornerLike &&
       (attrSignals.hasCloseToken || pseudoGlyph || textSignals.hasStrongCloseText || textSignals.hasSymbol);
 
-    const isValid = (clickable || pseudoAdCloseProxy || cornerCloseProxy) && (directCloseSignal || weakAdCloseSignal);
+    const graphicCornerProxy =
+      clickable &&
+      compactTarget &&
+      cornerLike &&
+      graphicOnly &&
+      (adContext || attrSignals.hasAdToken);
+
+    const graphicAdProxy =
+      clickable &&
+      compactTarget &&
+      graphicOnly &&
+      adContext;
+
+    const isValid =
+      (clickable || pseudoAdCloseProxy || cornerCloseProxy || graphicCornerProxy || graphicAdProxy) &&
+      (directCloseSignal || weakAdCloseSignal || graphicCornerProxy || graphicAdProxy);
 
     let priority = 0;
     if (textSignals.hasStrongCloseText) priority += 4;
@@ -449,6 +478,9 @@
     if (cornerLike) priority += 1;
     if (cornerCloseProxy) priority += 2;
     if (weakAdCloseSignal) priority += 2;
+    if (graphicOnly) priority += 2;
+    if (graphicCornerProxy) priority += 2;
+    if (graphicAdProxy) priority += 2;
 
     return {
       isValid,
@@ -456,6 +488,8 @@
       compactTarget,
       adContext,
       cornerLike,
+      graphicOnly,
+      graphicAdProxy,
     };
   };
 
