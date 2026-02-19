@@ -44,7 +44,9 @@ To uninstall the extension, similarly to the installation process, toggle the ex
 
 ## Latest Version
 
-### 1.0 - 2026-02-XX
+### [1.0]
+
+#### **iOS/iPadOS** - 2026-02-19
 
 - Initial release with basic features
 
