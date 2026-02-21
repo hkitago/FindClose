@@ -14,16 +14,16 @@
   
   const SHAKER_THRESHOLD = 80;
   const SHAKER_TIMEOUT = 2500;
-  const MOUSE_SHAKE_WINDOW_MS = 800;
+  const MOUSE_SHAKE_WINDOW_MS = 700;
   const MOUSE_SHAKE_TIMEOUT_SMALL = 2000;
   const MOUSE_SHAKE_TIMEOUT_MEDIUM = 2500;
   const MOUSE_SHAKE_TIMEOUT_LARGE = 3000;
   const MOUSE_SHAKE_DIAGONAL_MEDIUM = 2200;
   const MOUSE_SHAKE_DIAGONAL_LARGE = 2800;
-  const MOUSE_SHAKE_MIN_DIRECTION_CHANGES = 3;
-  const MOUSE_SHAKE_MIN_TOTAL_DISTANCE = 420;
-  const MOUSE_SHAKE_MIN_SEGMENT_DELTA = 14;
-  const MOUSE_SHAKE_MIN_SPEED = 1200;
+  const MOUSE_SHAKE_MIN_DIRECTION_CHANGES = 2;
+  const MOUSE_SHAKE_MIN_TOTAL_DISTANCE = 350;
+  const MOUSE_SHAKE_MIN_SEGMENT_DELTA = 10;
+  const MOUSE_SHAKE_MIN_SPEED = 900;
 
   const isIPadOS = () => navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
   const isIOS = /iPhone|iPod/.test(navigator.userAgent);
@@ -109,6 +109,7 @@
   const WEAK_CLOSE_TEXT_PATTERNS = [
     /閉|关|關|닫다|غلق|बंद|रद्द|ปิด/
   ];
+  const MAX_CLOSE_LABEL_CHARS = 32;
 
   const ATTR_CLOSE_KEYWORDS = new Set([
     'close', 'closead', 'closebtn', 'closebutton', 'closeicon', 'closemark',
@@ -232,6 +233,15 @@
       hasStrongCloseText: STRONG_CLOSE_TEXT_PATTERNS.some(pattern => pattern.test(combinedText)),
       hasWeakCloseText: WEAK_CLOSE_TEXT_PATTERNS.some(pattern => pattern.test(combinedText)),
     };
+  };
+
+  const getNormalizedTextLength = (el) => {
+    const textCandidates = collectTextCandidates(el);
+    const combinedText = textCandidates
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return combinedText.length;
   };
 
   const getAttributeSignals = (el) => {
@@ -417,6 +427,7 @@
   const getCandidateMeta = (el) => {
     const rect = el.getBoundingClientRect();
     const textSignals = getTextSignals(el);
+    const textLength = getNormalizedTextLength(el);
     const attrSignals = getAttributeSignals(el);
     const pseudoGlyph = hasPseudoCloseGlyph(el);
     const adContext = isLikelyAdContext(el);
@@ -465,7 +476,10 @@
       graphicOnly &&
       adContext;
 
+    const exceedsTextLength = textLength > MAX_CLOSE_LABEL_CHARS;
+
     const isValid =
+      !exceedsTextLength &&
       (clickable || pseudoAdCloseProxy || cornerCloseProxy || graphicCornerProxy || graphicAdProxy) &&
       (directCloseSignal || weakAdCloseSignal || graphicCornerProxy || graphicAdProxy);
 
@@ -1282,7 +1296,7 @@
       return false;
     }
   };
-                                   
+
   // ========================================
   // Event listeners
   // ========================================
