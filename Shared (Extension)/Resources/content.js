@@ -75,6 +75,7 @@
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        overflow: hidden !important;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -271,11 +272,32 @@
 
   const hasPseudoCloseGlyph = (el) => {
     const ownerWindow = getOwnerWindow(el);
+
+    const normalizeContent = (raw) => {
+      if (!raw || raw === 'none' || raw === 'normal') return '';
+      let s = String(raw).trim();
+      // Strip surrounding quotes if present
+      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1);
+      }
+      // Basic unescape for common sequences
+      s = s
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\\\/g, '\\')
+        .trim();
+      return s;
+    };
+
     const pseudoCheck = (pseudoType) => {
       const style = ownerWindow.getComputedStyle(el, pseudoType);
-      const content = style.content;
-      if (!content || content === 'none' || content === 'normal') return false;
-      return PSEUDO_CLOSE_SYMBOL_PATTERN.test(content);
+      const contentRaw = style.content;
+      const text = normalizeContent(contentRaw);
+      if (!text) return false;
+      if (PSEUDO_CLOSE_SYMBOL_PATTERN.test(text)) return true;
+      // Also treat strong close texts in pseudo content as a strong signal
+      return STRONG_CLOSE_TEXT_PATTERNS.some((pattern) => pattern.test(text));
     };
 
     return pseudoCheck('::before') || pseudoCheck('::after');
@@ -571,12 +593,86 @@
       return tagScore(b.el) - tagScore(a.el);
     });
 
-    validButtons.forEach(({ el }) => {
-      const isChildOfSelected = finalTargets.some(target => target.contains(el));
-      const containsSelected = finalTargets.some(target => el.contains(target));
+    // Prefer native interactive elements (BUTTON, A, INPUT) when parent/child candidates conflict
+    const isNativeInteractive = (node) => {
+      if (!node || !node.tagName) return false;
+      const tag = node.tagName.toUpperCase();
+      if (tag === 'BUTTON' || tag === 'A') return true;
+      if (tag === 'INPUT') {
+        const type = (node.getAttribute('type') || '').toLowerCase();
+        return type !== 'hidden';
+      }
+      return false;
+    };
 
-      if (!isChildOfSelected && !containsSelected) {
+    const tagScoreForTieBreak = (node) => {
+      if (!node || !node.tagName) return 0;
+      const tag = node.tagName.toUpperCase();
+      if (tag === 'BUTTON') return 6;
+      if (tag === 'A') return 3;
+      if (tag === 'INPUT') return 2;
+      return 1;
+    };
+
+    validButtons.forEach(({ el }) => {
+      // Check if this element is a descendant of an already selected target
+      const ancestorIndex = finalTargets.findIndex(target => target.contains(el));
+      // Check if this element contains an already selected target
+      const containedIndexes = finalTargets
+        .map((target, idx) => ({ target, idx }))
+        .filter(entry => el.contains(entry.target))
+        .map(entry => entry.idx);
+
+      const hasAncestor = ancestorIndex !== -1;
+      const hasChildren = containedIndexes.length > 0;
+
+      if (!hasAncestor && !hasChildren) {
         finalTargets.push(el);
+        return;
+      }
+
+      if (hasAncestor) {
+        const ancestor = finalTargets[ancestorIndex];
+        const elNative = isNativeInteractive(el);
+        const ancestorNative = isNativeInteractive(ancestor);
+
+        if (elNative && !ancestorNative) {
+          // Prefer the native child over non-native ancestor
+          finalTargets.splice(ancestorIndex, 1, el);
+          return;
+        }
+        if (!elNative && ancestorNative) {
+          // Keep native ancestor
+          return;
+        }
+        // Both native or both non-native: tie-breaker using tag score (favor BUTTON over others)
+        if (tagScoreForTieBreak(el) > tagScoreForTieBreak(ancestor)) {
+          finalTargets.splice(ancestorIndex, 1, el);
+        }
+        return;
+      }
+
+      if (hasChildren) {
+        const elNative = isNativeInteractive(el);
+        const childNatives = containedIndexes.some(i => isNativeInteractive(finalTargets[i]));
+
+        if (elNative && !childNatives) {
+          // Remove all non-native children and keep the native parent
+          // Remove from highest index to lowest to avoid reindexing issues
+          containedIndexes.sort((a, b) => b - a).forEach(i => finalTargets.splice(i, 1));
+          finalTargets.push(el);
+          return;
+        }
+        if (!elNative && childNatives) {
+          // Keep existing native children, skip non-native parent
+          return;
+        }
+        // If both sides are native or both non-native, prefer keeping existing selections unless parent has higher tag score
+        const maxChildScore = Math.max(0, ...containedIndexes.map(i => tagScoreForTieBreak(finalTargets[i])));
+        if (tagScoreForTieBreak(el) > maxChildScore) {
+          containedIndexes.sort((a, b) => b - a).forEach(i => finalTargets.splice(i, 1));
+          finalTargets.push(el);
+        }
       }
     });
 
