@@ -121,8 +121,7 @@ browser.windows.onFocusChanged.addListener(async (windowId) => {
 
 browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.type === 'UPDATE_ICON') {
-    const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
-    await updateToolbarIcon(activeTab?.id ?? null, settings.get('isFindCloseEnabled'));
+    await updateToolbarIcon(sender.tab?.id ?? null, settings.get('isFindCloseEnabled'));
 
     return;
   }
