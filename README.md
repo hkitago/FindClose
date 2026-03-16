@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/icon-48.png" height="36" valign="bottom"/> FindClose for Safari Extension
+# <img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/icon-48.png" height="36" valign="middle"/> FindClose for Safari Extension
 
 This Safari extension makes tiny close buttons on ads and overlays easier to spot. It highlights hard-to-find close icons in real time, helping you locate hidden buttons quickly and clear your screen with ease.
 
@@ -22,8 +22,8 @@ To uninstall the extension, similarly to the installation process, toggle the ex
 
 ### Icon States
 
-- **Extension Inactive by Default:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon.svg" height="24" valign="bottom"/></code>
-- **Extension Active:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon-on.svg" height="24" valign="bottom"/></code>
+- **Extension Inactive by Default:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon.svg" height="24" valign="middle"/></code>
+- **Extension Active:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon-on.svg" height="24" valign="middle"/></code>
 
 3. When enabled and you encounter tiny buttons:
 
