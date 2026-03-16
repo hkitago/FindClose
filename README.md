@@ -19,6 +19,12 @@ To uninstall the extension, similarly to the installation process, toggle the ex
 
 1. Open a webpage in Safari.
 2. Tap or click the icon next to the address bar and choose the extension.
+
+### Icon States
+
+- **Extension Inactive by Default:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon.svg" height="24" valign="bottom"/></code>
+- **Extension Active:** <code><img src="https://raw.githubusercontent.com/hkitago/FindClose/refs/heads/main/Shared%20(Extension)/Resources/images/toolbar-icon-on.svg" height="24" valign="bottom"/></code>
+
 3. When enabled and you encounter tiny buttons:
 
 📱 iOS / iPadOS
